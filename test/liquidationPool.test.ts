@@ -4,7 +4,7 @@ const { formatEther, parseEther } =require('@ethersproject/units')
 const raiAbi = require('../abis/raiAbi.json');
 const hre = require("hardhat");
 
-// // // Mainnet Fork and test case for mainnet with hardhat network by impersonate account from mainnet
+// Mainnet Fork and test case for mainnet with hardhat network by impersonate account from mainnet
 describe("deployed Contract on Mainnet fork", function() {
     let accounts: any
     let LiquidationPoolContract: any
@@ -100,7 +100,7 @@ describe("deployed Contract on Mainnet fork", function() {
             })
         })
     
-        describe('claimETH()', () => {
+        describe('claimETH() and trasferRaiInternal()', () => {
 
             it('#1 First Deposit Rai by two user', async function() {
                 await LiquidationPoolContract_Instance.connect(signer).depositRAI(hre.ethers.utils.parseUnits('50', 18));
@@ -113,26 +113,26 @@ describe("deployed Contract on Mainnet fork", function() {
                 ).to.be.revertedWith('LiquidationPool/Wait to finish locking period.');
             })
             it('#3 Should revert bcuz not enough deposited', async function() {
-                await hre.ethers.provider.send("evm_setNextBlockTimestamp", [1626750880]) // Monday, 7 June 2021 12:06:40
+                await hre.ethers.provider.send("evm_setNextBlockTimestamp", [1782969212]) 
                 await hre.ethers.provider.send("evm_mine")
                 await expect(
                     LiquidationPoolContract_Instance.connect(signer).claimETH(hre.ethers.utils.parseUnits('60', 18)),
                 ).to.be.revertedWith('LiquidationPool/Not Enough Rai balance');
             })
             it('#3 Should revert bcuz not enough rai used to liquidate', async function() {
-                await hre.ethers.provider.send("evm_setNextBlockTimestamp", [1626751880]) // Monday, 7 June 2021 12:06:40
+                await hre.ethers.provider.send("evm_setNextBlockTimestamp", [1782979212])
                 await hre.ethers.provider.send("evm_mine")
                 await expect(
                     LiquidationPoolContract_Instance.connect(signer).claimETH(hre.ethers.utils.parseUnits('50', 18)),
                 ).to.be.revertedWith('LiquidationPool/Not Enough ETH used currently');
             })
-            it('#4 Should able to claim eth', async function() {
-                await hre.ethers.provider.send("evm_setNextBlockTimestamp", [1626760880]) // Monday, 7 June 2021 12:06:40
+            it('#4 Should able to transfer Internal Rai For Liquidate and claim eth', async function() {
+                await hre.ethers.provider.send("evm_setNextBlockTimestamp", [1782989212])
                 await hre.ethers.provider.send("evm_mine")
                 const internaBal0 = await ISafeEngineContract.coinBalance(LiquidationPoolContract_Instance.address)
                 await LiquidationPoolContract_Instance.transferRAIInternalForLiquidate(internaBal0);
 
-                const tx = await signer.sendTransaction({
+                await signer.sendTransaction({
                     to: LiquidationPoolContract_Instance.address,
                     value: hre.ethers.utils.parseEther("2")
                 });
@@ -143,72 +143,7 @@ describe("deployed Contract on Mainnet fork", function() {
                 const afterEthBalance =  await hre.ethers.provider.getBalance(accountToImpersonate)
                 const diffBalance = afterEthBalance.sub(beforeEthBalance);
                 expect(diffBalance.toString()).to.be.closeTo(hre.ethers.utils.parseUnits('0.9'), hre.ethers.utils.parseUnits('1'));
-
             })
         })
-
-        // it('#claimETH', async function() {
-        //     await LiquidationPoolContract_Instance.connect(signer).depositRAI(hre.ethers.utils.parseUnits('50', 18));
-
-        //     await LiquidationPoolContract_Instance.connect(signer2).depositRAI(hre.ethers.utils.parseUnits('50', 18));
-
-        //     const internaBal0 = await ISafeEngineContract.coinBalance(LiquidationPoolContract_Instance.address)
-        //     console.log('internaBal0: ', internaBal0.toString())
-            
-        //     await LiquidationPoolContract_Instance.transferRAIInternalForLiquidate(internaBal0);
-
-        //     const bal01 =  await hre.ethers.provider.getBalance(accounts[0].address)
-        //     console.log('bal01: ', bal01.toString())
-
-        //     const bal02 =  await hre.ethers.provider.getBalance(accountToImpersonate)
-        //     console.log('bal02: ', bal02.toString())
-            
-        //     const tx = signer.sendTransaction({
-        //         to: LiquidationPoolContract_Instance.address,
-        //         value: hre.ethers.utils.parseEther("2")
-        //     });
-        //     // console.log('tx: ', tx)
-
-        //     const bal000 =  await hre.ethers.provider.getBalance(LiquidationPoolContract_Instance.address)
-        //     console.log('bal000: ', bal000.toString())
-
-        //     const bal033 =  await hre.ethers.provider.getBalance(accounts[0].address)
-        //     console.log('bal033: ', bal033.toString())
-
-        //     const bal044 =  await hre.ethers.provider.getBalance(accountToImpersonate)
-        //     console.log('bal044: ', bal044.toString())
-
-        //     await hre.ethers.provider.send("evm_setNextBlockTimestamp", [1626750880]) // Monday, 7 June 2021 12:06:40
-        //     await hre.ethers.provider.send("evm_mine")
-            
-        //     await LiquidationPoolContract_Instance.connect(signer).claimETH(hre.ethers.utils.parseUnits('50', 18));
-        //     await LiquidationPoolContract_Instance.connect(signer2).claimETH(hre.ethers.utils.parseUnits('50', 18));
-
-        //     const bal03 =  await hre.ethers.provider.getBalance(accounts[0].address)
-        //     console.log('bal03: ', bal03.toString())
-
-        //     const bal04 =  await hre.ethers.provider.getBalance(accountToImpersonate)
-        //     console.log('bal04: ', bal04.toString())
-
-        //     const bal0000 =  await hre.ethers.provider.getBalance(LiquidationPoolContract_Instance.address)
-        //     console.log('bal0000: ', bal0000.toString())
-        
-        // })
-
-        // it('#transferRAIInternalForLiquidate', async function() {
-        //     await LiquidationPoolContract_Instance.depositRAI(hre.ethers.utils.parseUnits('5', 18));
-        //     const userBalanceInLiquidationPool = await LiquidationPoolContract_Instance.userRaiBalanceMapping(accountToImpersonate)
-        //     console.log('userBalanceInLiquidationPool: ', userBalanceInLiquidationPool[0].toString())
-            
-        //     const internaBal0 = await ISafeEngineContract.coinBalance(LiquidationPoolContract_Instance.address)
-        //     console.log('internaBal0: ', internaBal0.toString())
-
-        //     await LiquidationPoolContract_Instance.transferRAIInternalForLiquidate(internaBal0);  
-
-        //     const internaBal1 = await ISafeEngineContract.coinBalance(LiquidationPoolContract_Instance.address)
-        //     console.log('internaBal1: ', internaBal1.toString())
-
-        // })
-        
     });
 })
