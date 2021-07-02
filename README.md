@@ -14,7 +14,7 @@ In the contract once RAI is deposited by user so after 10 days of period user ca
 
 Testing has bee done on mainnet fork by hardhat tool.
 
-## To Setup
+## To Setup and test
 
 1). Clone Repo  
 2). add .env file to root and add below config
